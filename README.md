@@ -191,7 +191,7 @@ stock-portfolio-api/  # Code Block Start
 ## Installation
 ### Clone the Repository:
 ```bash
-git clone https://github.com/your-repository/stock-portfolio-api.git
+git clone https://github.com/Vaibhav-crux/StockManagementBackend.git
 cd stock-portfolio-api
 ```
 ### Create a Virtual Environment:
