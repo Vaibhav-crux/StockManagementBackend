@@ -1,0 +1,54 @@
+# Define the version of Docker Compose
+version: '3.8'
+
+# Services define the different components of the application
+services:
+  
+  # The `web` service will run the FastAPI application
+  web:
+    build: .  # Build the container from the Dockerfile in the current directory
+    ports:
+      - "8000:8000"  # Map port 8000 on the host machine to port 8000 inside the container
+    environment:
+      - PORT=${PORT}  # The port to run the application (from .env file)
+      - DB_ENV=${DB_ENV}  # The database environment (from .env file)
+      - PROD_DB_CONNECTION=${PROD_DB_CONNECTION}  # Database connection string (from .env file)
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}  # JWT secret key (from .env file)
+      - JWT_ALGORITHM=${JWT_ALGORITHM}  # JWT algorithm (from .env file)
+      - JWT_EXPIRY_MINUTES=${JWT_EXPIRY_MINUTES}  # JWT expiration time in minutes (from .env file)
+      - REDIS_HOST=${REDIS_HOST}  # Redis host address (from .env file)
+      - REDIS_PORT=${REDIS_PORT}  # Redis port (from .env file)
+      - REDIS_PASSWORD=${REDIS_PASSWORD}  # Redis password (from .env file)
+    depends_on:
+      - db  # Ensure the `db` service (PostgreSQL) is running before starting the `web` service
+      - redis  # Ensure the `redis` service is running before starting the `web` service
+    volumes:
+      - .:/app  # Mount the current directory into the container for live code reloading during development
+    command: uvicorn app.server:app --host 0.0.0.0 --port 8000 --reload  # Run the FastAPI app with auto-reloading during development
+
+  # The `db` service will run a PostgreSQL database
+  db:
+    image: postgres:13  # Use the official PostgreSQL 13 image
+    environment:
+      POSTGRES_USER: ${DB_USER}  # Set the PostgreSQL user (from .env file)
+      POSTGRES_PASSWORD: ${DB_PASSWORD}  # Set the PostgreSQL password (from .env file)
+      POSTGRES_DB: ${DB_NAME}  # Set the database name (from .env file)
+    ports:
+      - "5432:5432"  # Map port 5432 on the host to port 5432 inside the container (PostgreSQL default port)
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Persist PostgreSQL data in a Docker volume
+
+  # The `redis` service will run a Redis instance
+  redis:
+    image: redis:6  # Use the official Redis 6 image
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}  # Set the Redis password (from .env file)
+    ports:
+      - "6379:6379"  # Map port 6379 on the host to port 6379 inside the container (Redis default port)
+    volumes:
+      - redis_data:/data  # Persist Redis data in a Docker volume
+
+# Define named volumes for persistent data storage
+volumes:
+  postgres_data:  # Volume for PostgreSQL data storage
+  redis_data:  # Volume for Redis data storage

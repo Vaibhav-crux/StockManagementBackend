@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Monitor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            flex: 1;
+        }
+        pre {
+            background: #f8f8f8;
+            padding: 10px;
+            border-radius: 4px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .timestamp {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>API Data Monitor</h1>
+    <div class="container">
+        <div class="card">
+            <h2>WebSocket Real-time Updates</h2>
+            <div class="timestamp" id="ws-timestamp"></div>
+            <pre id="ws-data">Connecting...</pre>
+        </div>
+        
+        <div class="card">
+            <h2>HTTP Endpoint Data</h2>
+            <div class="timestamp" id="http-timestamp"></div>
+            <pre id="http-data">Loading...</pre>
+        </div>
+    </div>
+
+    <script>
+        // WebSocket Connection
+        const ws = new WebSocket('ws://localhost:8000/api/v1/tickers/ws');
+        const wsDataElement = document.getElementById('ws-data');
+        const wsTimestamp = document.getElementById('ws-timestamp');
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            wsDataElement.textContent = JSON.stringify(data, null, 2);
+            wsTimestamp.textContent = `Last update: ${new Date().toLocaleTimeString()}`;
+        };
+
+        ws.onerror = (error) => {
+            wsDataElement.textContent = `WebSocket error: ${error.message}`;
+        };
+
+        // HTTP Polling
+        const tickerId = 'aa8ec768-e80d-4a7d-9cb9-68535d049eba';
+        const httpDataElement = document.getElementById('http-data');
+        const httpTimestamp = document.getElementById('http-timestamp');
+
+        async function fetchData() {
+            try {
+                const response = await fetch(
+                    `http://13.49.74.30/api/v1/tickers/${tickerId}?skip=0&limit=10`
+                );
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                httpDataElement.textContent = JSON.stringify(data, null, 2);
+                httpTimestamp.textContent = `Last update: ${new Date().toLocaleTimeString()}`;
+            } catch (error) {
+                httpDataElement.textContent = `Fetch error: ${error.message}`;
+            }
+        }
+
+        // Poll every 2 seconds
+        setInterval(fetchData, 2000);
+        fetchData(); // Initial fetch
+    </script>
+</body>
+</html>

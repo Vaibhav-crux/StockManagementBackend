@@ -1,0 +1,114 @@
+name: Deploy FastAPI Application to AWS EC2
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:  # Allows manual triggering
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Python environment
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      # Step 3: Configure SSH for EC2 connection
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.AWS_ACCESS_KEY }}  # Your SSH private key
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.AWS_REGION }} >> ~/.ssh/known_hosts  # 13.49.74.30
+
+      # Step 4: Ensure the app directory exists on the EC2 instance
+      - name: Ensure App Directory on EC2
+        run: |
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.AWS_SSH_USER }}@${{ secrets.AWS_REGION }} \
+          "mkdir -p /home/${{ secrets.AWS_SSH_USER }}/stock-market-data"
+
+      # Step 5: Transfer project files to the EC2 instance
+      - name: Transfer Files to EC2 Instance
+        run: |
+          scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no -r $(pwd)/* \
+          ${{ secrets.AWS_SSH_USER }}@${{ secrets.AWS_REGION }}:/home/${{ secrets.AWS_SSH_USER }}/stock-market-data
+
+            # Step 6: Create the `.env` file on the EC2 instance
+      - name: Create .env on EC2 Instance
+        env:
+          PORT: 8000
+          PROD_DB_CONNECTION: "postgres://avnadmin:${{ secrets.DB_PASSWORD }}@assignment1-codverts-b1ba.h.aivencloud.com:25959/defaultdb?sslmode=require"
+          DB_ENV: "development"
+          DB_USER: "avnadmin"
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_HOST: "assignment1-codverts-b1ba.h.aivencloud.com"
+          DB_PORT: "25959"
+          DB_NAME: "defaultdb"
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+          JWT_ALGORITHM: "HS256"
+          JWT_EXPIRY_MINUTES: "30"
+          REDIS_HOST: "redis-14939.c256.us-east-1-2.ec2.redns.redis-cloud.com"
+          REDIS_PORT: "14939"
+          REDIS_USERNAME: "default"
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}  # Add this in GitHub Secrets
+        run: |
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.AWS_SSH_USER }}@${{ secrets.AWS_REGION }} << EOF
+          echo "PORT=${PORT}" > /home/${{ secrets.AWS_SSH_USER }}/stock-market-data/.env
+          echo "PROD_DB_CONNECTION=${PROD_DB_CONNECTION}" >> /home/${{ secrets.AWS_SSH_USER }}/stock-market-data/.env
+          echo "DB_ENV=${DB_ENV}" >> /home/${{ secrets.AWS_SSH_USER }}/stock-market-data/.env
+          echo "DB_USER=${DB_USER}" >> /home/${{ secrets.AWS_SSH_USER }}/stock-market-data/.env
+          echo "DB_PASSWORD=${DB_PASSWORD}" >> /home/${{ secrets.AWS_SSH_USER }}/stock-market-data/.env
+          echo "DB_HOST=${DB_HOST}" >> /home/${{ secrets.AWS_SSH_USER }}/stock-market-data/.env
+          echo "DB_PORT=${DB_PORT}" >> /home/${{ secrets.AWS_SSH_USER }}/stock-market-data/.env
+          echo "DB_NAME=${DB_NAME}" >> /home/${{ secrets.AWS_SSH_USER }}/stock-market-data/.env
+          echo "JWT_SECRET_KEY=${JWT_SECRET_KEY}" >> /home/${{ secrets.AWS_SSH_USER }}/stock-market-data/.env
+          echo "JWT_ALGORITHM=${JWT_ALGORITHM}" >> /home/${{ secrets.AWS_SSH_USER }}/stock-market-data/.env
+          echo "JWT_EXPIRY_MINUTES=${JWT_EXPIRY_MINUTES}" >> /home/${{ secrets.AWS_SSH_USER }}/stock-market-data/.env
+          echo "REDIS_HOST=${REDIS_HOST}" >> /home/${{ secrets.AWS_SSH_USER }}/stock-market-data/.env
+          echo "REDIS_PORT=${REDIS_PORT}" >> /home/${{ secrets.AWS_SSH_USER }}/stock-market-data/.env
+          echo "REDIS_USERNAME=${REDIS_USERNAME}" >> /home/${{ secrets.AWS_SSH_USER }}/stock-market-data/.env
+          echo "REDIS_PASSWORD=${REDIS_PASSWORD}" >> /home/${{ secrets.AWS_SSH_USER }}/stock-market-data/.env
+          EOF
+
+
+      # Step 7: Install dependencies, configure Nginx, and start the app
+      - name: Deploy Application on EC2
+        run: |
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.AWS_SSH_USER }}@${{ secrets.AWS_REGION }} << EOF
+          cd /home/${{ secrets.AWS_SSH_USER }}/stock-market-data
+          
+          # Create virtual environment if it doesn't exist
+          if [ ! -d "venv" ]; then
+            python3 -m venv venv
+          fi
+          
+          # Activate virtual environment and install dependencies
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          
+          # Install and configure Nginx
+          sudo apt update
+          sudo apt install -y nginx
+          sudo cp nginx/fastapi-app.conf /etc/nginx/sites-available/fastapi-app || echo "Nginx config not found"
+          sudo ln -sf /etc/nginx/sites-available/fastapi-app /etc/nginx/sites-enabled/fastapi-app || true
+          sudo rm -f /etc/nginx/sites-enabled/default
+          sudo nginx -t
+          sudo systemctl restart nginx
+          
+          # Stop any existing Uvicorn processes
+          pkill -f "uvicorn" || true
+          
+          # Start the FastAPI app with nohup
+          nohup python -m uvicorn main:app --host 0.0.0.0 --port 8000 &> myapp.log &
+          EOF

@@ -1,0 +1,48 @@
+# Python bytecode files
+*.pyc
+*.pyo
+__pycache__/ 
+
+# Virtual environment directories
+.venv/
+venv/
+env/
+ENV/
+
+.env
+
+# Distribution / packaging
+*.egg
+*.egg-info/
+dist/
+build/
+*.tar.gz
+
+# IDE files (example for PyCharm, VSCode, etc.)
+.idea/
+.vscode/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Python test coverage
+.coverage
+*.cover
+
+# Pytest
+.cache/
+
+# flake8
+.flake8
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Logs folder
+logs/
+
+# Extractor folder
+extractor/
+.git/
