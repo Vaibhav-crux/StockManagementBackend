@@ -358,6 +358,18 @@ REDIS_PASSWORD=<REDIS_PASSWORD>
     }
     ```
 
+### Logout
+- **POST** `/api/v1/users/logout`
+  - **Description**: Authenticate a user and return a JWT token.
+  - **Request Header**: Bearer `<JWT Token>`
+
+  - **Response**:
+    ```json
+    {
+      "message": "successfully logout"
+    }
+    ```
+
 ## Tickers
 
 ### Get Tickers
