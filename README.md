@@ -361,7 +361,7 @@ REDIS_PASSWORD=<REDIS_PASSWORD>
 ### Logout
 - **POST** `/api/v1/users/logout`
   - **Description**: Authenticate a user and return a JWT token.
-  - **Request Header**: Bearer `<JWT Token>`
+  - **Header**: Bearer `<JWT Token>`
 
   - **Response**:
     ```json
@@ -462,6 +462,7 @@ REDIS_PASSWORD=<REDIS_PASSWORD>
 ### Place Order
 - **POST** `/api/v1/place-order`
   - **Description**: Place a new order.
+  - **Header**: Bearer `<JWT Token>`
   - **Request Body**:
     ```json
     [
@@ -492,6 +493,7 @@ REDIS_PASSWORD=<REDIS_PASSWORD>
   - **Query Parameters**:
     - `skip`: Number of records to skip (default: 0)
     - `limit`: Maximum number of records to return (default: 100)
+    - **Header**: Bearer `<JWT Token>`
   - **Response**:
     ```json
     {
@@ -516,6 +518,7 @@ REDIS_PASSWORD=<REDIS_PASSWORD>
 ### Get Portfolio Position
 - **POST** `/api/v1/portfolio-position`
   - **Description**: Retrieve the portfolio positions for the authenticated user.
+  - **Header**: Bearer `<JWT Token>`
   - **Response**:
     ```json
     {
@@ -539,6 +542,7 @@ REDIS_PASSWORD=<REDIS_PASSWORD>
 ### Get Quality Checks
 - **GET** `/api/v1/quality-checks`
   - **Description**: Perform quality checks on the user's orders and return flagged issues.
+  - **Header**: Bearer `<JWT Token>`
   - **Response**:
     ```json
     {
