@@ -3,9 +3,7 @@
 ## **Overview**
 The **Stock Portfolio Management** project is designed with a **Service-Oriented Architecture (SOA)** approach with **async RESTful API**, ensuring modularity, scalability, and maintainability. Built using modern technologies such as **Python**, **FastAPI**, **Docker**, **PostgreSQL**, **Redis**, and **WebSocket**, this application provides a robust platform for managing stock portfolios, tracking investments, and performing real-time analysis.
 
-### **API Access & Deployment**  
-The backend has been deployed on **AWS** at:  
-👉 **`http://13.49.74.30`**  
+### **API Access**
 
 For API testing, import the provided **Insomnia** file:  
 📂 **File Name:** `stock_market_analysis_v1`
@@ -180,10 +178,10 @@ stock-portfolio-api/  # Code Block Start
 │   └── init.py            # App package initialization
 │
 ├── tests/                     # Unit and integration tests
-│   ├── test_api.py            # API testing
 │   ├── test_database_connection.py  # DB connection tests
 │   ├── test_websocket.py      # WebSocket functionality tests
 │   ├── generate_jwt.py        # Generate Random Text
+│   ├── session_connection_test.py # Test db connection
 │   ├── monitor.html           # Test Websocket in frontend
 │
 ```
@@ -191,7 +189,7 @@ stock-portfolio-api/  # Code Block Start
 ## Installation
 ### Clone the Repository:
 ```bash
-git clone https://github.com/Vaibhav-crux/StockManagementBackend.git
+git clone https://github.com/your-repository/stock-portfolio-api.git
 cd stock-portfolio-api
 ```
 ### Create a Virtual Environment:
@@ -358,18 +356,6 @@ REDIS_PASSWORD=<REDIS_PASSWORD>
     }
     ```
 
-### Logout
-- **POST** `/api/v1/users/logout`
-  - **Description**: Authenticate a user and return a JWT token.
-  - **Header**: Bearer `<JWT Token>`
-
-  - **Response**:
-    ```json
-    {
-      "message": "successfully logout"
-    }
-    ```
-
 ## Tickers
 
 ### Get Tickers
@@ -462,7 +448,6 @@ REDIS_PASSWORD=<REDIS_PASSWORD>
 ### Place Order
 - **POST** `/api/v1/place-order`
   - **Description**: Place a new order.
-  - **Header**: Bearer `<JWT Token>`
   - **Request Body**:
     ```json
     [
@@ -493,7 +478,6 @@ REDIS_PASSWORD=<REDIS_PASSWORD>
   - **Query Parameters**:
     - `skip`: Number of records to skip (default: 0)
     - `limit`: Maximum number of records to return (default: 100)
-    - **Header**: Bearer `<JWT Token>`
   - **Response**:
     ```json
     {
@@ -518,7 +502,6 @@ REDIS_PASSWORD=<REDIS_PASSWORD>
 ### Get Portfolio Position
 - **POST** `/api/v1/portfolio-position`
   - **Description**: Retrieve the portfolio positions for the authenticated user.
-  - **Header**: Bearer `<JWT Token>`
   - **Response**:
     ```json
     {
@@ -542,7 +525,6 @@ REDIS_PASSWORD=<REDIS_PASSWORD>
 ### Get Quality Checks
 - **GET** `/api/v1/quality-checks`
   - **Description**: Perform quality checks on the user's orders and return flagged issues.
-  - **Header**: Bearer `<JWT Token>`
   - **Response**:
     ```json
     {

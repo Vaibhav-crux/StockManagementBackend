@@ -51,7 +51,7 @@ async def get_tickers(
         .subquery()
     )
 
-    # Main query to join Ticks with the latest orders
+    # Main query to join Ticks with the latest orders, ordered by latest timestamp
     query = (
         select(
             Ticks.id,
@@ -64,7 +64,7 @@ async def get_tickers(
         )
         .join(subquery, Ticks.id == subquery.c.tick_id)
         .where(subquery.c.rn == 1)
-        .order_by(Ticks.ticker)
+        .order_by(subquery.c.timestamp.desc())  # Changed to order by latest timestamp
         .offset(skip)
         .limit(limit)
     )

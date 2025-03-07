@@ -11,8 +11,6 @@ class TimeoutMiddleware(BaseHTTPMiddleware):
     def __init__(self, app, timeout: int = 30):
         """
         Initialize the timeout middleware with a default timeout of 30 seconds
-        :param app: FastAPI application instance
-        :param timeout: Maximum time in seconds for request processing
         """
         super().__init__(app)
         self.timeout = timeout
@@ -20,9 +18,6 @@ class TimeoutMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """
         Dispatch the request with timeout handling
-        :param request: Incoming request
-        :param call_next: Next middleware or endpoint handler
-        :return: Response
         """
         try:
             # Log the request start
@@ -53,8 +48,6 @@ class TimeoutMiddleware(BaseHTTPMiddleware):
 def setup_timeout(app, timeout: int = 10):
     """
     Helper function to add timeout middleware to the FastAPI app
-    :param app: FastAPI application instance
-    :param timeout: Timeout value in seconds
     """
     app.add_middleware(TimeoutMiddleware, timeout=timeout)
     logger.info(f"Timeout middleware configured with {timeout}s timeout")

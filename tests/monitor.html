@@ -43,17 +43,11 @@
             <div class="timestamp" id="ws-timestamp"></div>
             <pre id="ws-data">Connecting...</pre>
         </div>
-        
-        <div class="card">
-            <h2>HTTP Endpoint Data</h2>
-            <div class="timestamp" id="http-timestamp"></div>
-            <pre id="http-data">Loading...</pre>
-        </div>
     </div>
 
     <script>
-        // WebSocket Connection
-        const ws = new WebSocket('ws://localhost:8000/api/v1/tickers/ws');
+        // WebSocket Connection to deployed server
+        const ws = new WebSocket('ws://127.0.0.1:8000/api/v1/tickers/ws');
         const wsDataElement = document.getElementById('ws-data');
         const wsTimestamp = document.getElementById('ws-timestamp');
 
@@ -67,32 +61,13 @@
             wsDataElement.textContent = `WebSocket error: ${error.message}`;
         };
 
-        // HTTP Polling
-        const tickerId = 'aa8ec768-e80d-4a7d-9cb9-68535d049eba';
-        const httpDataElement = document.getElementById('http-data');
-        const httpTimestamp = document.getElementById('http-timestamp');
+        ws.onopen = () => {
+            wsDataElement.textContent = "Connected to WebSocket. Waiting for data...";
+        };
 
-        async function fetchData() {
-            try {
-                const response = await fetch(
-                    `http://13.49.74.30/api/v1/tickers/${tickerId}?skip=0&limit=10`
-                );
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                httpDataElement.textContent = JSON.stringify(data, null, 2);
-                httpTimestamp.textContent = `Last update: ${new Date().toLocaleTimeString()}`;
-            } catch (error) {
-                httpDataElement.textContent = `Fetch error: ${error.message}`;
-            }
-        }
-
-        // Poll every 2 seconds
-        setInterval(fetchData, 2000);
-        fetchData(); // Initial fetch
+        ws.onclose = () => {
+            wsDataElement.textContent = "WebSocket connection closed.";
+        };
     </script>
 </body>
 </html>

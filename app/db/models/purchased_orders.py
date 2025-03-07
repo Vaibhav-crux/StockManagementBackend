@@ -26,7 +26,6 @@ class PurchasedOrders(BaseModel):
     def __repr__(self):
         return f"<PurchasedOrders(user_id={self.user_id}, tick_id={self.tick_id}, purchase_price={self.purchase_price}, purchase_qty={self.purchase_qty}, timestamp='{self.timestamp}')>"
 
-# Update Users and Ticks models to include relationships
 from app.db.models.users import Users
 from app.db.models.ticks import Ticks
 

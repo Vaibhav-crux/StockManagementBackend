@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy import text
 from app.config.db_connection import get_db_connection
 from app.main import app
+from app.db.session import create_tables
 
 async def check_db_connection():
     """
@@ -13,28 +14,37 @@ async def check_db_connection():
     try:
         db_connection_string, ssl_args = get_db_connection()
         
-        # Use an asynchronous SQLAlchemy engine to validate the connection
         engine = create_async_engine(db_connection_string, connect_args=ssl_args)
         async with engine.connect() as connection:
-            # Use SQLAlchemy's text() function to wrap the raw SQL query
-            await connection.execute(text("SELECT 1"))  # Simple query to validate the connection
+            await connection.execute(text("SELECT 1"))
         print("Database connection established successfully.")
         return True
     except Exception as e:
         print(f"Error connecting to the database: {e}")
         return False
 
-# Perform DB check before starting the app
 async def startup_event():
+    """
+    Perform startup checks and create tables if they don't exist.
+    """
+    # Check database connection
     if not await check_db_connection():
         raise RuntimeError("Server startup halted due to database connection failure.")
+    
+    # Create tables if they don't exist
+    try:
+        await create_tables()
+        print("Database tables checked/created successfully.")
+    except Exception as e:
+        print(f"Error creating tables: {e}")
+        raise RuntimeError("Server startup halted due to table creation failure.")
 
-# Attach the startup event to the FastAPI app
+# Startup event to the FastAPI app
 @app.on_event("startup")
 async def startup():
     await startup_event()
 
-# Run Uvicorn only when executed directly
+
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))  
     uvicorn.run("app.server:app", host="0.0.0.0", port=port, reload=True)

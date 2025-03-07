@@ -80,6 +80,8 @@ async def websocket_tickers(websocket: WebSocket, db: AsyncSession = Depends(get
             try:
                 tickers, total, skip, limit = await get_tickers(db)
                 tickers_dict = [ticker.model_dump(mode='json') for ticker in tickers]
+                # Log the first few tickers to confirm order
+                logger.debug(f"WebSocket broadcast tickers (first 3): {tickers_dict[:3]}")
                 await websocket_manager.broadcast({
                     "tickers_with_dates": tickers_dict,
                     "total": total,

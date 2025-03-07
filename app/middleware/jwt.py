@@ -12,7 +12,7 @@ JWT_ALGORITHM = os.getenv("JWT_ALGORITHM")
 JWT_EXPIRY_MINUTES = int(os.getenv("JWT_EXPIRY_MINUTES", 30))
 logger = get_logger()
 
-# In-memory blacklist for invalidated tokens (replace with Redis or DB in production)
+# In-memory blacklist for invalidated tokens
 TOKEN_BLACKLIST = set()
 
 class JWTHandler:
